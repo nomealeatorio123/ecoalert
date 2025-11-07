@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoAlert - Denuncie Queimadas e Desmatamento</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --primary: #2E7D32;
+            --primary-dark: #1B5E20;
+            --secondary: #FF9800;
+            --accent: #F44336;
+            --light: #F5F5F5;
+            --dark: #212121;
+            --gray: #757575;
+            --light-gray: #E0E0E0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f8f9fa;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        header {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo img {
+            height: 50px;
+            margin-right: 10px;
+        }
+        
+        .logo h1 {
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-left: 30px;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+        
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+        
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary);
+            transition: width 0.3s;
+        }
+        
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #F57C00;
+        }
+        
+        .btn-accent {
+            background-color: var(--accent);
+        }
+        
+        .btn-accent:hover {
+            background-color: #D32F2F;
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1593113630400-ea4288922497?ixlib=rb-4.0.3') no-repeat center center/cover;
+            height: 90vh;
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: white;
+            margin-top: 80px;
+        }
+        
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .hero h2 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            color: white;
+            line-height: 1.2;
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        /* Features */
+        .features {
+            padding: 80px 0;
+            background-color: white;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .section-title h2 {
+            font-size: 2.5rem;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 15px;
+        }
+        
+        .section-title h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background-color: var(--secondary);
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-align: center;
+            padding: 30px 20px;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+        
+        /* Impact Images Section */
+        .impact-section {
+            padding: 80px 0;
+            background-color: var(--light);
+        }
+        
+        .impact-title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .impact-title h2 {
+            font-size: 2.5rem;
+            color: var(--primary-dark);
+        }
+        
+        .impact-title p {
+            font-size: 1.1rem;
+            color: var(--gray);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .impact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .impact-card {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            height: 300px;
+        }
+        
+        .impact-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        
+        .impact-card:hover img {
+            transform: scale(1.05);
+        }
+        
+        .impact-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 20px;
+            color: white;
+        }
+        
+        .impact-overlay h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+        
+        /* Map Section */
+        .map-section {
+            padding: 80px 0;
+            background-color: var(--light);
+        }
+        
+        .map-container {
+            height: 500px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        #reportMap {
+            height: 100%;
+            width: 100%;
+        }
+        
+        /* Report Form */
+        .report-section {
+            padding: 80px 0;
+            background-color: white;
+        }
+        
+        .report-container {
+            display: flex;
+            gap: 50px;
+            align-items: center;
+        }
+        
+        .report-form {
+            flex: 1;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .report-info {
+            flex: 1;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--light-gray);
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        /* Stats */
+        .stats {
+            padding: 80px 0;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            color: white;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+        }
+        
+        .stat-item {
+            padding: 30px 20px;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        /* FAQ */
+        .faq-section {
+            padding: 80px 0;
+            background-color: var(--light);
+        }
+        
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .faq-item {
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+        
+        .faq-question {
+            background-color: white;
+            padding: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .faq-answer {
+            background-color: white;
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s, padding 0.3s;
+        }
+        
+        .faq-answer.open {
+            padding: 20px;
+            max-height: 500px;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 60px 0 20px;
+        }
+        
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: white;
+        }
+        
+        .footer-links h4 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+        
+        .footer-links ul {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-links a {
+            color: var(--light-gray);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: var(--secondary);
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: white;
+            transition: background-color 0.3s;
+        }
+        
+        .social-links a:hover {
+            background-color: var(--primary);
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--light-gray);
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .hero h2 {
+                font-size: 2.8rem;
+            }
+            
+            .report-container {
+                flex-direction: column;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .hero h2 {
+                font-size: 2.3rem;
+            }
+            
+            .hero p {
+                font-size: 1.1rem;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <div class="logo">
+                    <i class="fas fa-tree fa-2x" style="color: #2E7D32; margin-right: 10px;"></i>
+                    <h1>EcoAlert</h1>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="#hero">Início</a></li>
+                    <li><a href="#denunciar">Denunciar</a></li>
+                    <li><a href="#impacto">Impacto</a></li>
+                    <li><a href="#mapa">Mapa</a></li>
+                    <li><a href="#estatisticas">Estatísticas</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                    <li><a href="#contato">Contato</a></li>
+                </ul>
+                <a href="#denunciar" class="btn">Faça uma Denúncia</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <div class="hero-content">
+            <h2>Proteja nossas florestas e biodiversidade</h2>
+            <p>Denuncie queimadas e desmatamento ilegal em tempo real. Sua ação pode salvar ecossistemas inteiros e combater as mudanças climáticas.</p>
+            <div class="hero-buttons">
+                <a href="#denunciar" class="btn btn-accent">Denunciar Agora</a>
+                <a href="#mapa" class="btn btn-secondary">Ver Mapa</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <div class="section-title">
+                <h2>Como Funciona</h2>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <h3>Localize a Ocorrência</h3>
+                    <p>Use nosso mapa interativo para marcar com precisão o local da queimada, desmatamento ou atividade de caça/pesca ilegal.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <h3>Registre Evidências</h3>
+                    <p>Adicione fotos, vídeos e detalhes para documentar a ocorrência e fortalecer sua denúncia — especialmente importante em casos de caça e pesca ilegal.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Denúncia Anônima</h3>
+                    <p>Se preferir, sua identidade será preservada. Sua segurança é nossa prioridade.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Acompanhe o Processo</h3>
+                    <p>Monitore o status de sua denúncia e veja como está sendo tratada pelos órgãos responsáveis.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Impact Images Section -->
+    <section class="impact-section" id="impacto">
+        <div class="container">
+            <div class="impact-title">
+                <h2>O Impacto das Queimadas e Desmatamento</h2>
+                <p>Imagens reais mostram a devastação causada por essas práticas ilegais, incluindo caça e pesca predatória.</p>
+            </div>
+            <div class="impact-grid">
+                <div class="impact-card">
+                    <img src="https://s2-g1.glbimg.com/LYYXa3rhERNw5EhkkgasCAKrHHw=/0x0:1920x1080/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2023/4/4/Lm4T2TQKWZ89yPXb8yoQ/globo-canal-4-20230805-1959-frame-62071.jpeg" alt="Queimada na floresta">
+                    <div class="impact-overlay">
+                        <h3>Queimada na Amazônia</h3>
+                        <p>Fogo consome hectares de floresta nativa todos os dias</p>
+                    </div>
+                </div>
+                <div class="impact-card">
+                    <img src="https://cultura.uol.com.br/upload/tvcultura/noticias/20240829112043_gvikvugwkaaq5-t-1-1-.jpeg" alt="Fogo em área de preservação">
+                    <div class="impact-overlay">
+                        <h3>Destruição de Habitats</h3>
+                        <p>Animais perdem seus lares e muitas espécies entram em extinção</p>
+                    </div>
+                </div>
+                <div class="impact-card">
+                    <img src="https://www.greenpeace.org/static/planet4-brasil-stateless/2023/11/6b2f84af-gp0sty7tv_medium_res-768x512.jpg" alt="Área desmatada">
+                    <div class="impact-overlay">
+                        <h3>Desmatamento Ilegal</h3>
+                        <p>Grandes áreas são devastadas para agricultura e pecuária</p>
+                    </div>
+                </div>
+                <!-- Novas imagens adicionadas para caça e pesca ilegal -->
+                <div class="impact-card">
+                    <img src="https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&w=1350&q=80" alt="Exemplo de caça ilegal">
+                    <div class="impact-overlay">
+                        <h3>Caça Ilegal</h3>
+                        <p>Atividades de caça predatória ameaçam espécies nativas e o equilíbrio do ecossistema.</p>
+                    </div>
+                </div>
+                <div class="impact-card">
+                    <img src="https://veja.abril.com.br/wp-content/uploads/2024/04/20230608oceanocorvinapmsc-2.png.jpg?quality=70&strip=info&w=1280&h=720&crop=1" alt="Pesca ilegal">
+                    <div class="impact-overlay">
+                        <h3>Pesca Ilegal</h3>
+                        <p>Uso de redes ilegais e pesca em áreas protegidas reduz drasticamente as populações de peixes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <section class="map-section" id="mapa">
+        <div class="container">
+            <div class="section-title">
+                <h2>Ocorrências em Tempo Real</h2>
+                <p>Visualize as denúncias recentes de queimadas, desmatamento, caça e pesca ilegal em todo o país</p>
+            </div>
+            <div class="map-container">
+                <div id="reportMap"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Report Section -->
+    <section class="report-section" id="denunciar">
+        <div class="container">
+            <div class="section-title">
+                <h2>Faça sua Denúncia</h2>
+                <p>Ajude a combater crimes ambientais. Sua denúncia é importante!</p>
+            </div>
+            <div class="report-container">
+                <div class="report-form">
+                    <form id="denunciaForm">
+                        <div class="form-group">
+                            <label for="tipo">Tipo de Ocorrência</label>
+                            <select class="form-control" id="tipo" required>
+                                <option value="">Selecione o tipo</option>
+                                <option value="queimada">Queimada</option>
+                                <option value="desmatamento">Desmatamento</option>
+                                <option value="caça">Caça Ilegal</option>
+                                <option value="pesca">Pesca Ilegal</option>
+                                <option value="ambos">Ambos</option>
+                                <option value="outros">Outros</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="local">Localização (coordenadas ou endereço)</label>
+                            <input type="text" class="form-control" id="local" placeholder="Ex: -23.5505, -46.6333" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="data">Data e Hora da Ocorrência</label>
+                            <input type="datetime-local" class="form-control" id="data" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="descricao">Descrição Detalhada</label>
+                            <textarea class="form-control" id="descricao" placeholder="Descreva o que você observou... (ex.: número de pessoas, uso de armas, tipo de embarcação, tipo de rede, mercadorias transportadas)" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="fotos">Anexar Fotos/Vídeos (opcional)</label>
+                            <input type="file" class="form-control" id="fotos" multiple accept="image/*,video/*">
+                        </div>
+                        <!-- Campos adicionais rápidos para caça/pesca -->
+                        <div class="form-group">
+                            <label>Detalhes Específicos (opcional)</label>
+                            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                                <label style="font-weight:400;"><input type="checkbox" id="armas" value="armas"> Uso de armas</label>
+                                <label style="font-weight:400;"><input type="checkbox" id="veiculo" value="veiculo"> Veículo/Embarcação</label>
+                                <label style="font-weight:400;"><input type="checkbox" id="rede" value="rede"> Uso de redes/armadilhas</label>
+                                <label style="font-weight:400;"><input type="checkbox" id="especie" value="especie"> Espécie ameaçada envolvida</label>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top: 30px;">
+                            <button type="submit" class="btn btn-accent" style="width: 100%;">Enviar Denúncia</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="report-info">
+                    <h3>Por que denunciar?</h3>
+                    <p>As queimadas, o desmatamento e as atividades ilegais de caça e pesca são responsáveis por:</p>
+                    <ul style="margin: 20px 0 20px 20px;">
+                        <li style="margin-bottom: 10px;">Destruição de habitats naturais</li>
+                        <li style="margin-bottom: 10px;">Perda de biodiversidade</li>
+                        <li style="margin-bottom: 10px;">Aumento das emissões de CO₂</li>
+                        <li style="margin-bottom: 10px;">Problemas de saúde pública</li>
+                        <li style="margin-bottom: 10px;">Desequilíbrios climáticos</li>
+                        <li style="margin-bottom: 10px;">Extinção local causada por caça/pesca predatória</li>
+                    </ul>
+                    <p>Sua denúncia será encaminhada automaticamente para os órgãos competentes como IBAMA, Polícia Ambiental e Ministério Público.</p>
+                    <div class="feature-card" style="margin-top: 30px; text-align: center;">
+                        <div class="feature-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <h3>Denúncia Segura</h3>
+                        <p>Seus dados pessoais são protegidos e você pode optar por fazer uma denúncia anônima.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats" id="estatisticas">
+        <div class="container">
+            <div class="section-title">
+                <h2 style="color: white;">Nosso Impacto</h2>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">4,827</div>
+                    <div class="stat-text">Denúncias Recebidas</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">72%</div>
+                    <div class="stat-text">Encaminhadas aos Órgãos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">1,240</div>
+                    <div class="stat-text">Áreas Protegidas</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">32</div>
+                    <div class="stat-text">Parcerias com ONGs</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section" id="faq">
+        <div class="container">
+            <div class="section-title">
+                <h2>Perguntas Frequentes</h2>
+            </div>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Minha denúncia é realmente anônima?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Sim, você pode optar por fazer uma denúncia completamente anônima. Nesse caso, nenhum dado pessoal será coletado ou compartilhado com os órgãos responsáveis.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Quanto tempo leva para uma denúncia ser processada?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>As denúncias são encaminhadas imediatamente após a submissão. O tempo de resposta depende do órgão responsável, mas geralmente ações iniciais são tomadas em até 72 horas.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Posso denunciar sem provas fotográficas?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Sim, embora fotos e vídeos fortaleçam a denúncia, você pode fazer uma denúncia apenas com a descrição e localização. Toda informação relevante é importante.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Como acompanho o andamento da minha denúncia?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Se você forneceu um e-mail no momento da denúncia, receberá atualizações sobre o status. Caso tenha feito anonimamente, poderá acompanhar pelo número de protocolo fornecido após a denúncia.</p>
+                    </div>
+                </div>
+                <!-- Novas perguntas sobre caça e pesca ilegal -->
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>O que é considerado caça e pesca ilegal?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Caça e pesca ilegal incluem atividades como uso de armas sem autorização, caça de espécies protegidas, captura em áreas de preservação, uso de redes ou armadilhas proibidas e comércio ilegal de animais ou pescado. Essas práticas são crime ambiental.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Como posso identificar e denunciar pesca ilegal?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Observe sinais como redes ilegais, embarcações em áreas proibidas, captura de espécies juvenis ou em épocas de reprodução. Anexe fotos, número/placa da embarcação, horário e localização. Essas informações ajudam os órgãos a agir.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>O que acontece depois que eu denuncio caça ilegal?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Recebida a denúncia, os órgãos ambientais avaliam as informações e, se necessário, acionam equipes de fiscalização. Dependendo da gravidade, podem ocorrer apreensões, multas e processos judiciais contra os responsáveis.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contato">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-about">
+                    <div class="footer-logo">EcoAlert</div>
+                    <p>Plataforma colaborativa para denúncia de queimadas e desmatamento, conectando cidadãos aos órgãos de proteção ambiental.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>Links Rápidos</h4>
+                    <ul>
+                        <li><a href="#hero">Início</a></li>
+                        <li><a href="#denunciar">Denunciar</a></li>
+                        <li><a href="#impacto">Impacto</a></li>
+                        <li><a href="#mapa">Mapa</a></li>
+                        <li><a href="#estatisticas">Estatísticas</a></li>
+                        <li><a href="#faq">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Recursos</h4>
+                    <ul>
+                        <li><a href="#">Guia de Denúncia</a></li>
+                        <li><a href="#">Legislação Ambiental</a></li>
+                        <li><a href="#">Relatórios Anuais</a></li>
+                        <li><a href="#">Dados Abertos</a></li>
+                        <li><a href="#">Parceiros</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Contato</h4>
+                    <ul>
+                        <li><i class="fas fa-envelope"></i> contato.ecoalert@gmail.com
+</li>
+                        <li><i class="fas fa-phone"></i> (44) 998353784 </li>
+                        <li><i class="fas fa-map-marker-alt"></i> Cidade Gaúcha, pr - Brasil</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 EcoAlert. Todos os direitos reservados. | Desenvolvido para proteger nossas florestas</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Inicialização do mapa
+        function initMap() {
+            const map = L.map('reportMap').setView([-14.2350, -51.9253], 4);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            // Adicionar alguns marcadores de exemplo
+            const reports = [
+                {lat: -3.4653, lng: -62.2159, type: 'queimada', date: '2023-08-05'},
+                {lat: -8.4095, lng: -55.9568, type: 'desmatamento', date: '2023-08-03'},
+                {lat: -15.6014, lng: -56.0979, type: 'queimada', date: '2023-08-01'},
+                {lat: -9.6498, lng: -55.7096, type: 'ambos', date: '2023-07-29'},
+                {lat: -5.4026, lng: -49.1277, type: 'desmatamento', date: '2023-07-28'},
+                // marcadores de exemplo para caça/pesca ilegal
+                {lat: -2.5300, lng: -54.7000, type: 'caça', date: '2024-09-10'},
+                {lat: -10.9167, lng: -37.1167, type: 'pesca', date: '2024-09-12'}
+            ];
+            
+            reports.forEach(report => {
+                let iconColor;
+                if (report.type === 'queimada') {
+                    iconColor = '#F44336';
+                } else if (report.type === 'desmatamento') {
+                    iconColor = '#795548';
+                } else if (report.type === 'caça') {
+                    iconColor = '#4A148C';
+                } else if (report.type === 'pesca') {
+                    iconColor = '#0277BD';
+                } else {
+                    iconColor = '#FF9800';
+                }
+                
+                const icon = L.divIcon({
+                    className: 'custom-icon',
+                    html: `<div style="background-color: ${iconColor}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>`,
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                });
+                
+                L.marker([report.lat, report.lng], {icon: icon}).addTo(map)
+                    .bindPopup(`<b>${report.type.charAt(0).toUpperCase() + report.type.slice(1)}</b><br>Data: ${report.date}`);
+            });
+        }
+        
+        // Inicializar o mapa quando a página carregar
+        document.addEventListener('DOMContentLoaded', initMap);
+        
+        // Funcionalidade do FAQ
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const answer = question.nextElementSibling;
+                answer.classList.toggle('open');
+                
+                const icon = question.querySelector('i');
+                if (answer.classList.contains('open')) {
+                    icon.classList.remove('fa-chevron-down');
+                    icon.classList.add('fa-chevron-up');
+                } else {
+                    icon.classList.remove('fa-chevron-up');
+                    icon.classList.add('fa-chevron-down');
+                }
+            });
+        });
+        
+        // Validação do formulário
+        document.getElementById('denunciaForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Simulação de envio bem-sucedido
+            alert('Denúncia enviada com sucesso! Número de protocolo: EC' + Math.floor(Math.random() * 10000));
+            this.reset();
+        });
+        
+        // Suavizar rolagem para âncoras
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    window.scrollTo({
+                        top: target.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
